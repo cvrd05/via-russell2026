@@ -75,33 +75,35 @@ export async function submitRsvp(data: RsvpFormData): Promise<RsvpSubmissionResu
   const payload = buildPayload(data);
 
   try {
-    const response = await fetch(RSVP_ENDPOINT, {
+    await fetch(RSVP_ENDPOINT, {
       method: 'POST',
-      // Deliberately no Content-Type header. Setting one (e.g.
-      // "application/json") makes this a non-simple CORS request, which
-      // triggers a preflight OPTIONS request — Google Apps Script web apps
-      // don't handle that. Leaving it unset makes the browser send
-      // "text/plain;charset=UTF-8" instead, which is preflight-exempt;
+      // Explicit text/plain Content-Type (never "application/json") keeps
+      // this a CORS-simple request so the browser never sends a preflight
+      // OPTIONS request, which Google Apps Script web apps don't support.
       // Apps Script still reads the raw JSON via e.postData.contents and
       // JSON.parse()s it on the server side.
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      // "no-cors" is required here. Google Apps Script's actual /exec
+      // response frequently doesn't carry a reliable
+      // Access-Control-Allow-Origin header, so a normal cors-mode fetch
+      // throws "TypeError: Failed to fetch" even though the request
+      // reached Apps Script and executed successfully — this is exactly
+      // why the Sheet was already receiving rows despite the website
+      // showing an error. no-cors sidesteps that response-readability
+      // check; the request still goes through and doPost still runs, we
+      // just can't read a body/status back.
+      //
+      // Trade-off: with an opaque no-cors response, we can no longer tell
+      // a genuine server-side failure (e.g. a typo'd sheet name) apart
+      // from success — any dispatched request that doesn't hit a real
+      // network error resolves here as success. Deliberately NOT retried
+      // with a second request on failure, since Apps Script may have
+      // already processed the first one; retrying risks a duplicate row
+      // + duplicate notification email for a single RSVP. Monitor the
+      // Apps Script "Executions" log for real server-side errors instead.
+      mode: 'no-cors',
       body: JSON.stringify(payload),
     });
-
-    if (!response.ok) {
-      return { success: false, error: `The RSVP service responded with status ${response.status}.` };
-    }
-
-    // Apps Script response bodies vary by implementation — treat a
-    // parseable JSON body with an explicit error flag as a failure,
-    // otherwise trust the HTTP 200 status as a successful submission.
-    try {
-      const result = await response.json();
-      if (result && typeof result === 'object' && result.status === 'error') {
-        return { success: false, error: result.message ?? 'The RSVP service reported an error.' };
-      }
-    } catch {
-      // Non-JSON response body — fall through and treat as success.
-    }
 
     return { success: true };
   } catch (error) {
