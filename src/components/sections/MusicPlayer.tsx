@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { media } from '@/data/weddingConfig';
+import RoseMotif from '@/components/decorative/RoseMotif';
 
 /**
  * Floating "Play Our Song" button.
@@ -37,49 +38,43 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="fixed bottom-6 right-5 z-[60] sm:bottom-8 sm:right-8">
+    <div className="fixed bottom-5 right-4 z-[60] sm:bottom-8 sm:right-8">
       <audio ref={audioRef} src={media.weddingSong} loop preload="none" />
 
-      <div className="group relative flex items-center">
-        <span
-          role="tooltip"
-          className="pointer-events-none absolute right-full mr-3 whitespace-nowrap rounded-sm bg-noir-elevated px-3 py-1.5 text-[0.65rem] uppercase tracking-[0.2em] text-ivory opacity-0 shadow-lg transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100"
-        >
-          {isPlaying ? 'Pause Our Song' : 'Play Our Song'}
-        </span>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-pressed={isPlaying}
+        aria-label={isPlaying ? `Pause ${media.weddingSongTitle}` : `Play ${media.weddingSongTitle}`}
+        className="group relative flex items-center gap-3 overflow-hidden rounded-full border border-noir/10 bg-ivory py-3.5 pl-3.5 pr-5 text-noir shadow-[0_10px_30px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:scale-[1.03] sm:py-4 sm:pl-4 sm:pr-6"
+      >
+        {/* Minimal floral watermark */}
+        <RoseMotif
+          className={`pointer-events-none absolute -right-3 -top-4 h-16 w-14 text-noir/[0.06] transition-transform duration-[6s] ease-linear ${
+            isPlaying ? 'rotate-[18deg]' : 'rotate-0'
+          }`}
+        />
 
-        <button
-          type="button"
-          onClick={toggle}
-          aria-pressed={isPlaying}
-          aria-label={isPlaying ? `Pause ${media.weddingSongTitle}` : `Play ${media.weddingSongTitle}`}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border border-champagne/60 bg-noir/90 text-ivory shadow-[0_8px_30px_rgba(0,0,0,0.55)] backdrop-blur-sm transition-colors duration-300 hover:border-champagne sm:h-16 sm:w-16"
-        >
+        <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-noir sm:h-10 sm:w-10">
           {isPlaying && (
-            <span className="absolute inset-0 animate-pulse-ring rounded-full border border-champagne/70" />
+            <span className="absolute inset-0 animate-pulse-ring rounded-full border border-noir/70" />
           )}
-
-          <span
-            className={`absolute inset-[3px] rounded-full border border-champagne/25 ${
-              isPlaying ? 'animate-spin-slow' : ''
-            }`}
-            aria-hidden="true"
-          >
-            <span className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-champagne/50" />
-          </span>
-
           {isPlaying ? (
-            <svg viewBox="0 0 24 24" className="relative h-5 w-5 fill-ivory" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-ivory" aria-hidden="true">
               <rect x="6" y="5" width="4" height="14" rx="0.5" />
               <rect x="14" y="5" width="4" height="14" rx="0.5" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" className="relative ml-0.5 h-5 w-5 fill-ivory" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="ml-0.5 h-4 w-4 fill-ivory" aria-hidden="true">
               <path d="M7 4.5v15l13-7.5-13-7.5z" />
             </svg>
           )}
-        </button>
-      </div>
+        </span>
+
+        <span className="relative whitespace-nowrap font-serif text-sm italic tracking-wide sm:text-base">
+          {isPlaying ? 'Playing Our Song' : 'Play Our Song'}
+        </span>
+      </button>
     </div>
   );
 }
