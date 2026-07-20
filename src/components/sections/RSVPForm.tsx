@@ -22,6 +22,8 @@ const labelClasses = 'block text-[0.65rem] uppercase tracking-[0.25em] text-ash-
 export default function RSVPForm() {
   const [formData, setFormData] = useState<RsvpFormData>(initialFormData);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [confirmedAttendance, setConfirmedAttendance] = useState<RsvpFormData['attendance']>('attending');
 
   const updateField = <K extends keyof RsvpFormData>(key: K, value: RsvpFormData[K]) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -30,8 +32,18 @@ export default function RSVPForm() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus('submitting');
+    setErrorMessage(null);
+
     const result = await submitRsvp(formData);
-    setStatus(result.success ? 'success' : 'error');
+
+    if (result.success) {
+      setConfirmedAttendance(formData.attendance);
+      setStatus('success');
+      setFormData(initialFormData);
+    } else {
+      setErrorMessage(result.error ?? null);
+      setStatus('error');
+    }
   };
 
   if (status === 'success') {
@@ -41,7 +53,7 @@ export default function RSVPForm() {
           <Reveal>
             <p className="text-eyebrow">RSVP Confirmed</p>
             <h2 className="mt-4 font-serif text-3xl text-ivory sm:text-4xl">
-              {formData.attendance === 'attending' ? 'See You There' : 'Thank You'}
+              {confirmedAttendance === 'attending' ? 'See You There' : 'Thank You'}
             </h2>
             <p className="mt-6 text-sm leading-relaxed text-ash-light sm:text-base">
               {rsvpThankYouMessage}
@@ -211,7 +223,7 @@ export default function RSVPForm() {
 
             {status === 'error' && (
               <p role="alert" className="text-center text-sm text-champagne">
-                Something went wrong sending your RSVP. Please try again.
+                {errorMessage ?? 'Something went wrong sending your RSVP. Please try again.'}
               </p>
             )}
 
