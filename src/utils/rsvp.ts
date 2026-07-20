@@ -16,7 +16,7 @@ import type { AttendanceStatus, RsvpFormData, RsvpSubmissionResult } from '@/typ
  */
 const RSVP_ENDPOINT =
   import.meta.env.VITE_RSVP_ENDPOINT ??
-  'https://script.google.com/macros/s/AKfycby3nba_eUHEyJxnDptweTuY8FKltrCeTeFxNuf3j7l1JxAtkCApjz6gu52R8nO3P1Y/exec';
+  'https://script.google.com/macros/s/AKfycbxUiAHK9WfVNLmCgX4IsZ5Np-B4cRxJa1vAp5hd-lRX43vquJ4u0RDwsdVP8acFZvr0/exec';
 
 /**
  * Shape expected by the Google Apps Script Web App / RSVP Google Sheet.
