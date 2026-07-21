@@ -1,26 +1,28 @@
 import { useState, type FormEvent } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { rsvpNotice, rsvpSettings, rsvpThankYouMessage } from '@/data/weddingConfig';
 import type { AttendanceStatus, RsvpFormData } from '@/types/wedding';
 import { submitRsvp } from '@/utils/rsvp';
 import SectionHeading from '@/components/ui/SectionHeading';
 import Reveal from '@/components/ui/Reveal';
 
-const initialFormData: RsvpFormData = {
+const createInitialFormData = (): RsvpFormData => ({
   fullName: '',
   email: '',
   contactNumber: '',
   attendance: 'attending',
   numberOfGuests: 1,
+  guestNames: Array(rsvpSettings.maxAdditionalGuests).fill(''),
   dietaryRestrictions: '',
   message: '',
-};
+});
 
 const inputClasses =
   'w-full border-0 border-b border-hairline bg-transparent py-3 text-ivory placeholder:text-ash/60 focus:border-champagne focus:outline-none transition-colors duration-300';
 const labelClasses = 'block text-[0.65rem] uppercase tracking-[0.25em] text-ash-light mb-2';
 
 export default function RSVPForm() {
-  const [formData, setFormData] = useState<RsvpFormData>(initialFormData);
+  const [formData, setFormData] = useState<RsvpFormData>(createInitialFormData);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [confirmedAttendance, setConfirmedAttendance] = useState<RsvpFormData['attendance']>('attending');
@@ -29,8 +31,31 @@ export default function RSVPForm() {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  const updateGuestName = (index: number, value: string) => {
+    setFormData((prev) => {
+      const guestNames = [...prev.guestNames];
+      guestNames[index] = value;
+      return { ...prev, guestNames };
+    });
+  };
+
+  const additionalGuestCount = Math.max(formData.numberOfGuests - 1, 0);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (additionalGuestCount > 0) {
+      const missingName = formData.guestNames
+        .slice(0, additionalGuestCount)
+        .some((name) => name.trim().length === 0);
+
+      if (missingName) {
+        setErrorMessage('Please enter the full name for each additional guest.');
+        setStatus('error');
+        return;
+      }
+    }
+
     setStatus('submitting');
     setErrorMessage(null);
 
@@ -39,7 +64,7 @@ export default function RSVPForm() {
     if (result.success) {
       setConfirmedAttendance(formData.attendance);
       setStatus('success');
-      setFormData(initialFormData);
+      setFormData(createInitialFormData());
     } else {
       setErrorMessage(result.error ?? null);
       setStatus('error');
@@ -130,11 +155,11 @@ export default function RSVPForm() {
               </div>
 
               {/*
-                Number of Guests only renders when the couple has explicitly
-                allowed additional attendees for this invitation — controlled
-                by `rsvpSettings.allowAdditionalGuests` in
-                src/data/weddingConfig.ts. Defaults to false so guests can
-                never add extra attendees on their own.
+                Number of Guests (and the dynamic guest-name inputs it
+                reveals below) only renders when the couple allows
+                additional attendees — controlled by
+                `rsvpSettings.allowAdditionalGuests` /
+                `maxAdditionalGuests` in src/data/weddingConfig.ts.
               */}
               {rsvpSettings.allowAdditionalGuests && (
                 <div>
@@ -159,6 +184,45 @@ export default function RSVPForm() {
                 </div>
               )}
             </div>
+
+            {/*
+              One "Guest N Full Name" input per additional party member,
+              beyond the primary submitter above. formData.guestNames is
+              always kept at a fixed length (rsvpSettings.maxAdditionalGuests)
+              so typed names survive the guest count going up or down —
+              only the first `additionalGuestCount` entries are ever shown,
+              required, or submitted.
+            */}
+            {rsvpSettings.allowAdditionalGuests && additionalGuestCount > 0 && (
+              <div className="space-y-9">
+                <AnimatePresence initial={false}>
+                  {Array.from({ length: additionalGuestCount }, (_, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <label htmlFor={`guestName-${index}`} className={labelClasses}>
+                        {`Guest ${index + 2} Full Name`}
+                      </label>
+                      <input
+                        id={`guestName-${index}`}
+                        name={`guestName-${index}`}
+                        type="text"
+                        required
+                        value={formData.guestNames[index] ?? ''}
+                        onChange={(e) => updateGuestName(index, e.target.value)}
+                        className={inputClasses}
+                        placeholder="Juan Dela Cruz"
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
 
             <fieldset>
               <legend className={labelClasses}>Attendance Confirmation</legend>

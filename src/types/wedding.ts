@@ -56,6 +56,13 @@ export interface RsvpFormData {
   contactNumber: string;
   attendance: AttendanceStatus;
   numberOfGuests: number;
+  /**
+   * Full names of every guest in the party besides the primary submitter,
+   * fixed at `rsvpSettings.maxAdditionalGuests` length so values already
+   * typed are preserved as `numberOfGuests` goes up or down — only the
+   * first `numberOfGuests - 1` entries are shown/required/submitted.
+   */
+  guestNames: string[];
   dietaryRestrictions: string;
   message: string;
 }

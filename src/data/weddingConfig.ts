@@ -159,12 +159,13 @@ export const weddingParty: { brideSide: WeddingPartyMember[]; groomSide: Wedding
 
 /**
  * RSVP behavior. `allowAdditionalGuests` gates whether the "Number of
- * Guests" field renders at all — keep it false unless the couple has
- * explicitly decided a given invitation allows a plus-one/party.
+ * Guests" field (and the dynamic additional-guest-name inputs it reveals)
+ * renders at all. `maxAdditionalGuests` is guests beyond the primary
+ * submitter, so total party size tops out at `maxAdditionalGuests + 1`.
  */
 export const rsvpSettings: RsvpSettings = {
-  allowAdditionalGuests: false,
-  maxAdditionalGuests: 0,
+  allowAdditionalGuests: true,
+  maxAdditionalGuests: 5,
   notificationEmail: rsvpNotificationEmail,
 };
 

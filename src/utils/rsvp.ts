@@ -49,21 +49,32 @@ const ATTENDANCE_LABELS: Record<AttendanceStatus, string> = {
 
 /**
  * Maps the site's current RSVP form fields onto the Google Sheet's column
- * schema. The form doesn't yet collect an invite code, per-guest names, a
- * meal choice, or a song request, so those are sent as empty strings (the
- * sheet will simply have blank cells for them) — `dietaryRestrictions` is
- * mapped to `meal` since it's the closest existing field. Add UI inputs for
- * the others later if the couple wants guests to fill them in directly.
+ * schema. The form doesn't yet collect an invite code, a meal choice, or a
+ * song request, so those are sent as empty strings (the sheet will simply
+ * have blank cells for them) — `dietaryRestrictions` is mapped to `meal`
+ * since it's the closest existing field. Add UI inputs for the others later
+ * if the couple wants guests to fill them in directly.
  */
 function buildPayload(data: RsvpFormData): GoogleSheetsRsvpPayload {
+  const guestCount = rsvpSettings.allowAdditionalGuests ? data.numberOfGuests : 1;
+
+  // Only the additional party members beyond the primary submitter — whose
+  // own name already lives in the `name` field above — and only as many
+  // slots as `guestCount` actually calls for (the guestNames array is kept
+  // at a fixed length in form state regardless of the current count).
+  const additionalGuestNames = data.guestNames
+    .slice(0, Math.max(guestCount - 1, 0))
+    .map((name) => name.trim())
+    .filter((name) => name.length > 0);
+
   return {
     inviteCode: '',
     name: data.fullName,
     email: data.email,
     phone: data.contactNumber,
     attending: ATTENDANCE_LABELS[data.attendance],
-    guests: String(rsvpSettings.allowAdditionalGuests ? data.numberOfGuests : 1),
-    guestNames: '',
+    guests: String(guestCount),
+    guestNames: additionalGuestNames.join(', '),
     meal: data.dietaryRestrictions,
     song: '',
     message: data.message,
