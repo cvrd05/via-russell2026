@@ -39,10 +39,10 @@ export default function MusicPlayer({ isPlaying, onToggle }: MusicPlayerProps) {
           )}
           <span className="absolute inset-0 rounded-full ring-1 ring-champagne/60" />
           <img
-            src={media.vinylImage}
+            src={isPlaying ? media.vinylAnimatedImage : media.vinylIdleImage}
             alt=""
             aria-hidden="true"
-            className={`h-full w-full rounded-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
+            className="h-full w-full rounded-full object-cover"
           />
         </button>
       </div>

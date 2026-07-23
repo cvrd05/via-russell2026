@@ -61,23 +61,24 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
         </motion.h1>
 
         {/*
-          Page 2 illustration. Rendered inside an aspect-ratio-locked
-          container matching the artwork's native 1408x768 canvas exactly,
-          so the vinyl overlay below stays correctly aligned with the
-          rose/heart artwork at every viewport size instead of drifting
-          out of place under object-cover cropping.
+          Page 2 illustration (background-removed frame.png — blends
+          straight into the page, no card edge). Rendered inside an
+          aspect-ratio-locked container matching the artwork's native
+          1379x752 canvas exactly, so the vinyl overlay below stays
+          correctly aligned with the rose/heart artwork at every viewport
+          size instead of drifting out of place under cropping.
         */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1 }}
-          className="relative mt-8 w-[96vw] max-w-[960px]"
-          style={{ aspectRatio: '1408 / 768' }}
+          className="relative mt-8 w-[96vw] max-w-[1100px]"
+          style={{ aspectRatio: '1024 / 752' }}
         >
           <img
             src={media.invitationImage}
             alt={`${bride.fullName} and ${groom.fullName} save the date invitation`}
-            className="absolute inset-0 h-full w-full rounded-sm object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]"
+            className="absolute inset-0 h-full w-full object-contain"
           />
 
           {/*
@@ -88,7 +89,7 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
           */}
           <div
             className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: '62.5%', top: '40%', width: '16.5%', aspectRatio: '1 / 1' }}
+            style={{ left: '73.3%', top: '40%', width: '22%', aspectRatio: '1 / 1' }}
           >
             <div className="group relative h-full w-full">
               <span
@@ -112,10 +113,10 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
                 )}
                 <span className="absolute inset-0 rounded-full ring-1 ring-champagne/50" />
                 <img
-                  src={media.vinylImage}
+                  src={isPlaying ? media.vinylAnimatedImage : media.vinylIdleImage}
                   alt=""
                   aria-hidden="true"
-                  className={`h-full w-full rounded-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
+                  className="h-full w-full rounded-full object-cover"
                 />
               </button>
             </div>
