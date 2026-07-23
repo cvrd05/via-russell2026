@@ -13,14 +13,14 @@ interface EnvelopeOpeningProps {
  *
  * Two-step interaction:
  *  1. 'idle' — only the frame is visible, with a small nudging arrow
- *     pointing at the slot/tab (the actual click target — covers the
- *     slot plus the arrow itself). No names, no date, no "Open the
- *     Invitation" text yet.
- *  2. Click the slot/arrow → 'revealed' — strip.jpg prints out of the
- *     slot, and the couple names/date/"Open the Invitation" all fade in
- *     staggered slightly after the strip starts. Nothing here animates
- *     on mount or on a generic tap-anywhere; everything is gated behind
- *     that one click.
+ *     pointing down at the "V&R" seal button (the actual click target),
+ *     matching the frame's own baked "Tap the button" copy. No names, no
+ *     date, no "Open the Invitation" text yet.
+ *  2. Click the button/arrow → 'revealed' — strip.jpg prints out of the
+ *     slot above, and the couple names/date/"Open the Invitation" all
+ *     fade in staggered slightly after the strip starts. Nothing here
+ *     animates on mount or on a generic tap-anywhere; everything is
+ *     gated behind that one click.
  *  3. Click "Open the Invitation" (now visible) → 'leaving' — a white
  *     layer fades in, then `onOpen()` fires once the screen is fully
  *     covered.
@@ -95,19 +95,20 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
 
           {/*
             strip.jpg "printing" out of the frame's slot, triggered by
-            clicking the slot/arrow (see handleReveal). Positioned as a
-            percentage of the frame, measured directly off the slot's
-            actual pixel bounds in page1.jpg (roughly x 42–52%, y 37–40%),
-            so it stays aligned with the slot at any size. Revealed
-            top-down via an animated clip-path — the top edge stays
-            pinned at the slot the whole time while progressively more
-            becomes visible below, matching the continuous "paper
-            feeding out" motion of the reference animation rather than
-            sliding or fading in place.
+            clicking the V&R button below (see handleReveal). Positioned
+            as a percentage of the frame, measured directly off a pixel
+            grid over page1.jpg's actual slot opening (centered ~49.9%
+            across, dark opening starting ~28.9% down), so it stays
+            aligned with the slot at any size instead of drifting to one
+            side. Revealed top-down via an animated clip-path — the top
+            edge stays pinned at the slot the whole time while
+            progressively more becomes visible below, so it reads as
+            paper slowly feeding out rather than sliding, fading, or
+            popping in.
           */}
           <div
             className="absolute overflow-hidden"
-            style={{ left: '41.9%', top: '36.5%', width: '10.6%' }}
+            style={{ left: '43.4%', top: '28.6%', width: '13%' }}
             aria-hidden="true"
           >
             <div className="relative w-full" style={{ aspectRatio: '273 / 818' }}>
@@ -115,7 +116,7 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
                 className="absolute inset-0 rounded-[1px] shadow-[0_14px_24px_-6px_rgba(0,0,0,0.65)]"
                 initial={{ clipPath: 'inset(0% 0% 100% 0%)' }}
                 animate={{ clipPath: showContent ? 'inset(0% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)' }}
-                transition={{ duration: 2.1, ease: 'easeOut' }}
+                transition={{ duration: 3.2, ease: [0.45, 0, 0.2, 1] }}
               >
                 <img
                   src={media.openingStripImage}
@@ -129,9 +130,11 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
           </div>
 
           {/*
-            Click target: the slot/tab plus the nudging arrow beside it —
-            this (not a generic tap-anywhere) is what triggers the strip
-            printing and the text reveal.
+            Click target: the "V&R" seal button — measured off page1.jpg
+            at ~49.7% across, ~70.7% down — plus the nudging arrow above
+            it. This (not the slot, and not a generic tap-anywhere) is
+            what triggers the strip printing and the text reveal, matching
+            the frame's own baked "Tap the button" copy pointing at it.
           */}
           <motion.button
             type="button"
@@ -139,21 +142,21 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
             disabled={stage !== 'idle'}
             animate={{ opacity: stage === 'idle' ? 1 : 0 }}
             transition={{ duration: 0.35 }}
-            className="absolute rounded-full disabled:pointer-events-none"
-            style={{ left: '39%', top: '32%', width: '30%', height: '14%' }}
+            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full disabled:pointer-events-none"
+            style={{ left: '49.7%', top: '70.7%', width: '20%', height: '18%' }}
             aria-label="Open the invitation"
           >
             <motion.svg
-              viewBox="0 0 60 24"
+              viewBox="0 0 24 56"
               fill="none"
               aria-hidden="true"
-              className="absolute h-auto text-champagne drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
-              style={{ right: '-4%', top: '30%', width: '48%' }}
-              animate={{ x: [0, -6, 0] }}
+              className="absolute left-1/2 h-auto w-[26%] -translate-x-1/2 text-champagne drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
+              style={{ bottom: '108%' }}
+              animate={{ y: [0, 6, 0] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
             >
               <path
-                d="M56 12H8M8 12l10-10M8 12l10 10"
+                d="M12 2v46M12 48L2 38M12 48l10-10"
                 stroke="currentColor"
                 strokeWidth="3"
                 strokeLinecap="round"

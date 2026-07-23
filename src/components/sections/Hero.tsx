@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { bride, groom, media, venue, weddingDateDisplay } from '@/data/weddingConfig';
+import { bride, groom, media } from '@/data/weddingConfig';
 import FallingPetals from '@/components/decorative/FallingPetals';
 import CountdownTimer from './CountdownTimer';
 
@@ -41,7 +41,7 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
           transition={{ duration: 1, delay: 0.4 }}
           className="mt-6 font-serif text-4xl leading-[1.05] text-ivory sm:text-6xl lg:text-7xl"
         >
-          {bride.fullName}
+          {bride.nickname}
         </motion.h1>
         <motion.span
           initial={{ opacity: 0 }}
@@ -57,17 +57,8 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
           transition={{ duration: 1, delay: 0.7 }}
           className="font-serif text-4xl leading-[1.05] text-ivory sm:text-6xl lg:text-7xl"
         >
-          {groom.fullName}
+          {groom.nickname}
         </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.9 }}
-          className="mt-5 text-xs uppercase tracking-[0.3em] text-ash-light"
-        >
-          {weddingDateDisplay} &middot; {venue.name}, {venue.city}
-        </motion.p>
 
         {/*
           Page 2 illustration. Rendered inside an aspect-ratio-locked
@@ -80,7 +71,7 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1 }}
-          className="relative mt-10 w-[94vw] max-w-[820px]"
+          className="relative mt-8 w-[96vw] max-w-[960px]"
           style={{ aspectRatio: '1408 / 768' }}
         >
           <img
