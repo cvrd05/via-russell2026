@@ -65,6 +65,18 @@ export const media = {
   venuePhoto: '/images/venue.jpg',
   weddingSong: '/audio/wedding-song.mp3',
   weddingSongTitle: "Can't Help Falling in Love",
+  // Opening (Page 1) illustration and the photo strip animated "printing"
+  // out of its slot.
+  openingFrameImage: '/images/design-assets/page1.jpg',
+  openingStripImage: '/images/design-assets/strip-cropped.jpg',
+  // Page 2 illustrated composition.
+  invitationImage: '/images/design-assets/page2.jpg',
+  // Cropped to a clean circle so it can be rotated as a music player control.
+  vinylImage: '/images/design-assets/vinyl-cropped.jpg',
+  // Blank paper-card texture the RSVP form is laid out on top of (cropped
+  // tight to just the cream paper grain, no shadow/edges, so it can tile
+  // or stretch cleanly behind a form container of any height).
+  rsvpPaperTexture: '/images/design-assets/rsvppaper-texture.jpg',
 };
 
 export const galleryImages: GalleryImage[] = [

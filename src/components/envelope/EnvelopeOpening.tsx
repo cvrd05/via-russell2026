@@ -1,133 +1,140 @@
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import RoseMotif from '@/components/decorative/RoseMotif';
+import { motion } from 'framer-motion';
 import FallingPetals from '@/components/decorative/FallingPetals';
-import { bride, groom, weddingDateDisplay } from '@/data/weddingConfig';
+import { bride, groom, media, weddingDateDisplay } from '@/data/weddingConfig';
 
 interface EnvelopeOpeningProps {
   onOpen: () => void;
 }
 
-type Stage = 'closed' | 'opening' | 'rising' | 'leaving';
-
 /**
- * Full-screen luxury envelope intro. Clicking "Open Invitation" plays a
- * staged sequence — the flap opens, the invitation card rises out, then the
- * whole overlay dissolves to reveal the hero section underneath.
+ * Page 1 — the opening screen. Built around the client-supplied
+ * `page1.jpg` illustration (a black-rose frame with a printer slot).
+ * `strip.jpg` animates as though it's being printed out of that slot,
+ * the "Open the Invitation" call-to-action pulses near the bottom, and
+ * tapping it triggers a white cross-fade into Page 2.
+ *
+ * Only the visual is new — the interaction contract is unchanged: this
+ * component still just calls `onOpen()` once, exactly as the previous
+ * envelope did, so App.tsx's isOpened/useLockBodyScroll wiring needs no
+ * changes at all.
  */
 export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
-  const [stage, setStage] = useState<Stage>('closed');
+  const [stage, setStage] = useState<'idle' | 'leaving'>('idle');
 
   const handleOpen = () => {
-    if (stage !== 'closed') return;
-    setStage('opening');
-    window.setTimeout(() => setStage('rising'), 700);
-    window.setTimeout(() => setStage('leaving'), 1650);
-    window.setTimeout(() => onOpen(), 2350);
+    if (stage === 'leaving') return;
+    setStage('leaving');
+    // Gives the white cover time to reach full opacity before the parent
+    // unmounts this component and the outer exit fade (App-level
+    // AnimatePresence, see the `exit` prop below) cross-fades the now
+    // fully-white screen into Page 2 mounted behind it.
+    window.setTimeout(() => onOpen(), 650);
   };
 
   return (
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-noir"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-noir"
       exit={{ opacity: 0 }}
       transition={{ duration: 0.7, ease: 'easeInOut' }}
       role="dialog"
-      aria-label="Wedding invitation envelope"
+      aria-label="Wedding invitation, opening screen"
     >
-      <AnimatePresence>
-        {stage !== 'leaving' && (
-          <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0">
-            <FallingPetals count={9} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute h-[70vmin] w-[70vmin] rounded-full bg-champagne/[0.05] blur-3xl"
-      />
+      <FallingPetals count={8} />
 
       <motion.div
-        className="relative flex flex-col items-center px-6 text-center"
+        className="relative z-10 flex flex-col items-center px-6 text-center"
         animate={{ opacity: stage === 'leaving' ? 0 : 1 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.35 }}
       >
-        <p className="text-eyebrow mb-3">Together with their families</p>
-        <h1 className="font-serif text-3xl leading-tight text-ivory sm:text-4xl">
-          {bride.nickname} <span className="text-champagne">&amp;</span> {groom.nickname}
-        </h1>
-        <p className="mt-2 text-xs uppercase tracking-[0.35em] text-ash-light">{weddingDateDisplay}</p>
-
-        {/* Envelope */}
-        <div
-          className="relative mt-12 h-[190px] w-[260px] sm:h-[220px] sm:w-[300px]"
-          style={{ perspective: '1200px' }}
+        <motion.p
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.15 }}
+          className="text-eyebrow mb-3"
         >
-          {/* Envelope body */}
-          <div className="hairline-border absolute inset-0 top-[38px] rounded-sm bg-noir-soft shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
-            <RoseMotif className="absolute bottom-2 right-2 h-10 w-9 text-ivory/10" />
-          </div>
+          Together with their families
+        </motion.p>
+        <motion.h1
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.9, delay: 0.3 }}
+          className="font-serif text-3xl leading-tight text-ivory sm:text-4xl"
+        >
+          {bride.nickname} <span className="text-champagne">&amp;</span> {groom.nickname}
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.9, delay: 0.4 }}
+          className="mt-2 text-xs uppercase tracking-[0.35em] text-ash-light"
+        >
+          {weddingDateDisplay}
+        </motion.p>
 
-          {/* Invitation card that rises out */}
-          <motion.div
-            className="hairline-border absolute left-1/2 top-[30px] flex h-[150px] w-[220px] -translate-x-1/2 flex-col items-center justify-center bg-noir-elevated px-4 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.8)] sm:h-[172px] sm:w-[254px]"
-            initial={{ y: 0, opacity: 0, scale: 0.96 }}
-            animate={
-              stage === 'rising' || stage === 'leaving'
-                ? { y: '-92%', opacity: 1, scale: 1 }
-                : stage === 'opening'
-                  ? { y: 0, opacity: 1, scale: 0.98 }
-                  : { y: 0, opacity: 0, scale: 0.96 }
-            }
-            transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            style={{ zIndex: 2 }}
-          >
-            <span className="text-eyebrow">Wedding Invitation</span>
-            <span className="mt-3 font-serif text-lg text-ivory sm:text-xl">
-              {bride.fullName}
-            </span>
-            <span className="my-1 text-xs uppercase tracking-[0.3em] text-champagne">and</span>
-            <span className="font-serif text-lg text-ivory sm:text-xl">{groom.fullName}</span>
-          </motion.div>
-
-          {/* Envelope flap */}
-          <motion.div
-            className="absolute inset-x-0 top-0 h-[78px] origin-top bg-[#17130f] sm:h-[92px]"
-            style={{
-              clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
-              transformStyle: 'preserve-3d',
-              zIndex: stage === 'closed' || stage === 'opening' ? 3 : 1,
-            }}
-            animate={{ rotateX: stage === 'closed' ? 0 : -170 }}
-            transition={{ duration: 0.7, ease: [0.45, 0, 0.55, 1] }}
+        {/* Page 1 illustration: black-rose frame with a printer slot. */}
+        <div
+          className="relative mt-9 w-[76vw] max-w-[380px] sm:max-w-[440px]"
+          style={{ aspectRatio: '1408 / 768' }}
+        >
+          <img
+            src={media.openingFrameImage}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full rounded-sm object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]"
           />
 
-          {/* Wax seal */}
-          <AnimatePresence>
-            {stage === 'closed' && (
-              <motion.div
-                exit={{ opacity: 0, scale: 0.6 }}
-                transition={{ duration: 0.3 }}
-                className="absolute left-1/2 top-[34px] z-10 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-champagne/70 bg-noir text-champagne shadow-[0_0_18px_rgba(201,180,138,0.25)] sm:top-[42px]"
-              >
-                <RoseMotif className="h-6 w-6" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/*
+            strip.jpg "printing" out of the frame's slot. Positioned as a
+            percentage of the frame so it stays aligned with the slot at
+            any size. Revealed top-down via an animated clip-path — the
+            image's top edge stays pinned at the slot the whole time while
+            progressively more of it becomes visible below, exactly like a
+            photo strip being fed out of a real printer slot, rather than
+            sliding or simply fading in.
+          */}
+          <div
+            className="absolute"
+            style={{ left: '43.8%', top: '26.5%', width: '12.2%' }}
+            aria-hidden="true"
+          >
+            <div className="relative w-full" style={{ aspectRatio: '273 / 818' }}>
+              <motion.img
+                src={media.openingStripImage}
+                alt=""
+                className="absolute inset-0 h-full w-full rounded-[2px] object-cover object-top shadow-[0_14px_24px_-6px_rgba(0,0,0,0.65)]"
+                initial={{ clipPath: 'inset(0% 0% 100% 0%)' }}
+                animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+                transition={{ duration: 1.9, delay: 0.6, ease: [0.65, 0, 0.35, 1] }}
+              />
+            </div>
+          </div>
         </div>
 
-        <button
+        <motion.button
           type="button"
           onClick={handleOpen}
-          disabled={stage !== 'closed'}
-          className="group relative mt-14 inline-flex items-center gap-4 overflow-hidden border border-champagne/60 px-10 py-4 text-xs uppercase tracking-[0.35em] text-ivory transition-colors duration-500 hover:border-champagne disabled:pointer-events-none"
+          disabled={stage === 'leaving'}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 1.2 }}
+          className="group relative mt-10 inline-flex items-center gap-3 disabled:pointer-events-none"
+          aria-label="Open the Invitation"
         >
-          <span className="absolute inset-0 -translate-x-full bg-champagne transition-transform duration-500 ease-out group-hover:translate-x-0" />
-          <span className="relative transition-colors duration-500 group-hover:text-noir">
-            {stage === 'closed' ? 'Open Invitation' : 'Opening…'}
+          <span className="animate-heartbeat font-serif text-xl italic tracking-wide text-champagne transition-colors duration-300 group-hover:text-ivory sm:text-2xl">
+            Open the Invitation
           </span>
-        </button>
+        </motion.button>
       </motion.div>
+
+      {/* White cross-fade cover, see handleOpen() for sequencing. */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-20 bg-ivory"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: stage === 'leaving' ? 1 : 0 }}
+        transition={{ duration: 0.6, ease: [0.65, 0, 0.35, 1] }}
+        aria-hidden="true"
+      />
     </motion.div>
   );
 }

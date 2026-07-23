@@ -1,6 +1,7 @@
 import { useCountdown } from '@/hooks/useCountdown';
 import { weddingDateISO } from '@/data/weddingConfig';
 import Reveal from '@/components/ui/Reveal';
+import VineDivider from '@/components/decorative/VineDivider';
 
 const units: { key: 'days' | 'hours' | 'minutes' | 'seconds'; label: string }[] = [
   { key: 'days', label: 'Days' },
@@ -22,6 +23,7 @@ export default function CountdownTimer() {
 
   return (
     <Reveal>
+      <VineDivider className="mx-auto mb-6 h-4 w-40 text-champagne/70" />
       <div
         role="timer"
         aria-live="polite"
@@ -31,9 +33,9 @@ export default function CountdownTimer() {
         {units.map((unit) => (
           <div
             key={unit.key}
-            className="hairline-border flex flex-col items-center gap-2 bg-noir-soft/60 px-2 py-5 sm:py-7"
+            className="flex flex-col items-center gap-2 border border-champagne/25 bg-noir-soft/60 px-2 py-5 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.8)] sm:py-7"
           >
-            <span className="font-serif text-3xl tabular-nums text-ivory sm:text-5xl">
+            <span className="font-serif text-3xl tabular-nums text-champagne-soft sm:text-5xl">
               {String(countdown[unit.key]).padStart(2, '0')}
             </span>
             <span className="text-[0.6rem] uppercase tracking-[0.25em] text-ash-light sm:text-xs">

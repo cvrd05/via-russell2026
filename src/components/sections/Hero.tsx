@@ -4,40 +4,27 @@ import { bride, groom, media, venue, weddingDateDisplay } from '@/data/weddingCo
 import FallingPetals from '@/components/decorative/FallingPetals';
 import CountdownTimer from './CountdownTimer';
 
-export default function Hero() {
+interface HeroProps {
+  isPlaying: boolean;
+  onToggleMusic: () => void;
+}
+
+export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
-  const imageY = useTransform(scrollYProgress, [0, 1], ['0%', '18%']);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
 
   return (
     <section
       id="home"
       ref={sectionRef}
-      className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-noir"
+      className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-noir py-24"
     >
-      <motion.div className="absolute inset-0" style={{ y: imageY }}>
-        {/*
-          Primary cinematic hero photo of the couple.
-          Replace /public/images/couple-main.jpg with the final selected
-          photo (keep the same filename, ideally a portrait/landscape shot
-          at 1920px+ wide for crisp full-bleed display).
-        */}
-        <img
-          src={media.couplePhotoMain}
-          alt={`${bride.fullName} and ${groom.fullName}`}
-          className="h-full w-full scale-110 object-cover"
-          fetchPriority="high"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-noir/70 via-noir/45 to-noir" />
-        <div className="absolute inset-0 bg-noir/20" />
-      </motion.div>
-
-      <FallingPetals count={7} />
+      <FallingPetals count={6} />
 
       <motion.div
         style={{ opacity: contentOpacity }}
-        className="relative z-10 flex flex-col items-center px-6 text-center"
+        className="relative z-10 flex w-full flex-col items-center px-6 text-center"
       >
         <motion.p
           initial={{ opacity: 0, y: 12 }}
@@ -52,7 +39,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="mt-6 font-serif text-5xl leading-[1.05] text-ivory sm:text-7xl lg:text-8xl"
+          className="mt-6 font-serif text-4xl leading-[1.05] text-ivory sm:text-6xl lg:text-7xl"
         >
           {bride.fullName}
         </motion.h1>
@@ -60,7 +47,7 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.65 }}
-          className="my-3 font-serif text-2xl italic text-champagne sm:text-3xl"
+          className="my-2 font-serif text-xl italic text-champagne sm:text-2xl"
         >
           and
         </motion.span>
@@ -68,29 +55,86 @@ export default function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.7 }}
-          className="font-serif text-5xl leading-[1.05] text-ivory sm:text-7xl lg:text-8xl"
+          className="font-serif text-4xl leading-[1.05] text-ivory sm:text-6xl lg:text-7xl"
         >
           {groom.fullName}
         </motion.h1>
 
-        <motion.div
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1 }}
-          className="mt-8 flex flex-col items-center gap-2"
+          transition={{ duration: 1, delay: 0.9 }}
+          className="mt-5 text-xs uppercase tracking-[0.3em] text-ash-light"
         >
-          <p className="text-sm uppercase tracking-[0.3em] text-ivory/90 sm:text-base">
-            {weddingDateDisplay}
-          </p>
-          <p className="text-xs uppercase tracking-[0.25em] text-ash-light">
-            {venue.name} &middot; {venue.city}, {venue.region}
-          </p>
+          {weddingDateDisplay} &middot; {venue.name}, {venue.city}
+        </motion.p>
+
+        {/*
+          Page 2 illustration. Rendered inside an aspect-ratio-locked
+          container matching the artwork's native 1408x768 canvas exactly,
+          so the vinyl overlay below stays correctly aligned with the
+          rose/heart artwork at every viewport size instead of drifting
+          out of place under object-cover cropping.
+        */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 1 }}
+          className="relative mt-10 w-[90vw] max-w-[640px]"
+          style={{ aspectRatio: '1408 / 768' }}
+        >
+          <img
+            src={media.invitationImage}
+            alt={`${bride.fullName} and ${groom.fullName} save the date invitation`}
+            className="absolute inset-0 h-full w-full rounded-sm object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]"
+          />
+
+          {/*
+            Vinyl music player, positioned in the gap between the black
+            rose ("Save Our Date") and the heart date tag below it. Shares
+            isPlaying/onToggleMusic with the persistent floating control
+            (MusicPlayer, see App.tsx) — one audio element, two controls.
+          */}
+          <div
+            className="absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: '62.5%', top: '40%', width: '13%', aspectRatio: '1 / 1' }}
+          >
+            <div className="group relative h-full w-full">
+              <span
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-sm bg-noir-elevated px-3 py-1.5 text-[0.6rem] uppercase tracking-[0.2em] text-ivory opacity-0 shadow-lg transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100"
+              >
+                {isPlaying ? 'Pause Our Song' : 'Play Our Song'}
+              </span>
+
+              <button
+                type="button"
+                onClick={onToggleMusic}
+                aria-pressed={isPlaying}
+                aria-label={
+                  isPlaying ? `Pause ${media.weddingSongTitle}` : `Play ${media.weddingSongTitle}`
+                }
+                className="relative flex h-full w-full items-center justify-center rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.6)] transition-transform duration-300 hover:scale-105"
+              >
+                {isPlaying && (
+                  <span className="absolute inset-0 animate-pulse-ring rounded-full border border-champagne/70" />
+                )}
+                <span className="absolute inset-0 rounded-full ring-1 ring-champagne/50" />
+                <img
+                  src={media.vinylImage}
+                  alt=""
+                  aria-hidden="true"
+                  className={`h-full w-full rounded-full object-cover ${isPlaying ? 'animate-spin-slow' : ''}`}
+                />
+              </button>
+            </div>
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 1.2 }}
+          transition={{ duration: 1, delay: 1.3 }}
           className="mt-12 w-full"
         >
           <CountdownTimer />
@@ -100,8 +144,8 @@ export default function Hero() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1.6 }}
-        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+        transition={{ duration: 1, delay: 1.7 }}
+        className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2"
         aria-hidden="true"
       >
         <motion.div
