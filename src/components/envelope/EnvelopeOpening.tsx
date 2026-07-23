@@ -10,26 +10,33 @@ interface EnvelopeOpeningProps {
 /**
  * Page 1 — the opening screen. Built around the client-supplied
  * `page1.jpg` illustration (a black-rose frame with a printer slot).
- * `strip.jpg` animates as though it's being printed out of that slot,
- * the "Open the Invitation" call-to-action pulses near the bottom, and
- * tapping it triggers a white cross-fade into Page 2.
+ *
+ * Sequence:
+ *  1. 'idle' — only the frame and the pulsing "Open the Invitation" CTA
+ *     are visible. No strip, no couple names/date yet.
+ *  2. Tap → 'printing' — strip.jpg animates out of the frame's slot, and
+ *     the couple names/date fade in staggered slightly after the strip
+ *     starts (both driven by the same tap, per design).
+ *  3. After the printing show finishes → 'leaving' — a white layer fades
+ *     in, then `onOpen()` fires once the screen is fully covered.
  *
  * Only the visual is new — the interaction contract is unchanged: this
- * component still just calls `onOpen()` once, exactly as the previous
- * envelope did, so App.tsx's isOpened/useLockBodyScroll wiring needs no
- * changes at all.
+ * component still just calls `onOpen()` once, exactly as before, so
+ * App.tsx's isOpened/useLockBodyScroll wiring needs no changes at all.
  */
 export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
-  const [stage, setStage] = useState<'idle' | 'leaving'>('idle');
+  const [stage, setStage] = useState<'idle' | 'printing' | 'leaving'>('idle');
+  const revealed = stage !== 'idle';
 
   const handleOpen = () => {
-    if (stage === 'leaving') return;
-    setStage('leaving');
-    // Gives the white cover time to reach full opacity before the parent
-    // unmounts this component and the outer exit fade (App-level
-    // AnimatePresence, see the `exit` prop below) cross-fades the now
-    // fully-white screen into Page 2 mounted behind it.
-    window.setTimeout(() => onOpen(), 650);
+    if (stage !== 'idle') return;
+    setStage('printing');
+    // Let the strip finish "printing" and the names settle before the
+    // white cover starts — see the timings below for how these line up.
+    window.setTimeout(() => {
+      setStage('leaving');
+      window.setTimeout(() => onOpen(), 650);
+    }, 2300);
   };
 
   return (
@@ -48,25 +55,22 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
         transition={{ duration: 0.35 }}
       >
         <motion.p
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.15 }}
+          animate={{ opacity: revealed ? 1 : 0, y: revealed ? 0 : -8 }}
+          transition={{ duration: 0.8, delay: revealed ? 0.35 : 0 }}
           className="text-eyebrow mb-3"
         >
           Together with their families
         </motion.p>
         <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, delay: 0.3 }}
+          animate={{ opacity: revealed ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: revealed ? 0.5 : 0 }}
           className="font-serif text-3xl leading-tight text-ivory sm:text-4xl"
         >
           {bride.nickname} <span className="text-champagne">&amp;</span> {groom.nickname}
         </motion.h1>
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, delay: 0.4 }}
+          animate={{ opacity: revealed ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: revealed ? 0.65 : 0 }}
           className="mt-2 text-xs uppercase tracking-[0.35em] text-ash-light"
         >
           {weddingDateDisplay}
@@ -85,28 +89,36 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
           />
 
           {/*
-            strip.jpg "printing" out of the frame's slot. Positioned as a
-            percentage of the frame so it stays aligned with the slot at
-            any size. Revealed top-down via an animated clip-path — the
-            image's top edge stays pinned at the slot the whole time while
-            progressively more of it becomes visible below, exactly like a
-            photo strip being fed out of a real printer slot, rather than
-            sliding or simply fading in.
+            strip.jpg "printing" out of the frame's slot, triggered by the
+            tap (see handleOpen). Positioned as a percentage of the frame,
+            measured directly off the slot's actual pixel bounds in
+            page1.jpg (roughly x 42–52%, y 37–40%), so it stays aligned
+            with the slot at any size instead of emerging from the ferns
+            above it. Revealed top-down via an animated clip-path — the
+            top edge stays pinned at the slot the whole time while
+            progressively more becomes visible below, so it reads as
+            paper feeding out rather than sliding or fading in place.
           */}
           <div
-            className="absolute"
-            style={{ left: '43.8%', top: '26.5%', width: '12.2%' }}
+            className="absolute overflow-hidden"
+            style={{ left: '41.9%', top: '36.5%', width: '10.6%' }}
             aria-hidden="true"
           >
             <div className="relative w-full" style={{ aspectRatio: '273 / 818' }}>
-              <motion.img
-                src={media.openingStripImage}
-                alt=""
-                className="absolute inset-0 h-full w-full rounded-[2px] object-cover object-top shadow-[0_14px_24px_-6px_rgba(0,0,0,0.65)]"
+              <motion.div
+                className="absolute inset-0 rounded-[1px] shadow-[0_14px_24px_-6px_rgba(0,0,0,0.65)]"
                 initial={{ clipPath: 'inset(0% 0% 100% 0%)' }}
-                animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
-                transition={{ duration: 1.9, delay: 0.6, ease: [0.65, 0, 0.35, 1] }}
-              />
+                animate={{ clipPath: revealed ? 'inset(0% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)' }}
+                transition={{ duration: 1.7, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <img
+                  src={media.openingStripImage}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover object-top"
+                />
+                {/* Soft shadow so the strip's leading edge blends into the slot's dark opening instead of showing a hard cut line. Clipped together with the image above since it's inside the same animated container. */}
+                <div className="absolute inset-x-0 top-0 h-[12%] bg-gradient-to-b from-black/80 to-transparent" />
+              </motion.div>
             </div>
           </div>
         </div>
@@ -114,10 +126,9 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
         <motion.button
           type="button"
           onClick={handleOpen}
-          disabled={stage === 'leaving'}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 1.2 }}
+          disabled={stage !== 'idle'}
+          animate={{ opacity: stage === 'idle' ? 1 : 0 }}
+          transition={{ duration: 0.4 }}
           className="group relative mt-10 inline-flex items-center gap-3 disabled:pointer-events-none"
           aria-label="Open the Invitation"
         >

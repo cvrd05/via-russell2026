@@ -80,7 +80,7 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1 }}
-          className="relative mt-10 w-[90vw] max-w-[640px]"
+          className="relative mt-10 w-[94vw] max-w-[820px]"
           style={{ aspectRatio: '1408 / 768' }}
         >
           <img
@@ -97,7 +97,7 @@ export default function Hero({ isPlaying, onToggleMusic }: HeroProps) {
           */}
           <div
             className="absolute -translate-x-1/2 -translate-y-1/2"
-            style={{ left: '62.5%', top: '40%', width: '13%', aspectRatio: '1 / 1' }}
+            style={{ left: '62.5%', top: '40%', width: '16.5%', aspectRatio: '1 / 1' }}
           >
             <div className="group relative h-full w-full">
               <span
