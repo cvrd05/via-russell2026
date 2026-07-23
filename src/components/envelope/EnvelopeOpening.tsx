@@ -11,32 +11,37 @@ interface EnvelopeOpeningProps {
  * Page 1 — the opening screen. Built around the client-supplied
  * `page1.jpg` illustration (a black-rose frame with a printer slot).
  *
- * Sequence:
- *  1. 'idle' — only the frame and the pulsing "Open the Invitation" CTA
- *     are visible. No strip, no couple names/date yet.
- *  2. Tap → 'printing' — strip.jpg animates out of the frame's slot, and
- *     the couple names/date fade in staggered slightly after the strip
- *     starts (both driven by the same tap, per design).
- *  3. After the printing show finishes → 'leaving' — a white layer fades
- *     in, then `onOpen()` fires once the screen is fully covered.
+ * Two-step interaction:
+ *  1. 'idle' — only the frame is visible, with a small nudging arrow
+ *     pointing at the slot/tab (the actual click target — covers the
+ *     slot plus the arrow itself). No names, no date, no "Open the
+ *     Invitation" text yet.
+ *  2. Click the slot/arrow → 'revealed' — strip.jpg prints out of the
+ *     slot, and the couple names/date/"Open the Invitation" all fade in
+ *     staggered slightly after the strip starts. Nothing here animates
+ *     on mount or on a generic tap-anywhere; everything is gated behind
+ *     that one click.
+ *  3. Click "Open the Invitation" (now visible) → 'leaving' — a white
+ *     layer fades in, then `onOpen()` fires once the screen is fully
+ *     covered.
  *
- * Only the visual is new — the interaction contract is unchanged: this
- * component still just calls `onOpen()` once, exactly as before, so
+ * Only the visual is new — the interaction contract with the parent is
+ * unchanged: this component still just calls `onOpen()` once, so
  * App.tsx's isOpened/useLockBodyScroll wiring needs no changes at all.
  */
 export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
-  const [stage, setStage] = useState<'idle' | 'printing' | 'leaving'>('idle');
-  const revealed = stage !== 'idle';
+  const [stage, setStage] = useState<'idle' | 'revealed' | 'leaving'>('idle');
+  const showContent = stage !== 'idle';
 
-  const handleOpen = () => {
+  const handleReveal = () => {
     if (stage !== 'idle') return;
-    setStage('printing');
-    // Let the strip finish "printing" and the names settle before the
-    // white cover starts — see the timings below for how these line up.
-    window.setTimeout(() => {
-      setStage('leaving');
-      window.setTimeout(() => onOpen(), 650);
-    }, 2300);
+    setStage('revealed');
+  };
+
+  const handleProceed = () => {
+    if (stage !== 'revealed') return;
+    setStage('leaving');
+    window.setTimeout(() => onOpen(), 650);
   };
 
   return (
@@ -55,22 +60,22 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
         transition={{ duration: 0.35 }}
       >
         <motion.p
-          animate={{ opacity: revealed ? 1 : 0, y: revealed ? 0 : -8 }}
-          transition={{ duration: 0.8, delay: revealed ? 0.35 : 0 }}
+          animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : -8 }}
+          transition={{ duration: 0.8, delay: showContent ? 0.4 : 0 }}
           className="text-eyebrow mb-3"
         >
           Together with their families
         </motion.p>
         <motion.h1
-          animate={{ opacity: revealed ? 1 : 0 }}
-          transition={{ duration: 0.8, delay: revealed ? 0.5 : 0 }}
+          animate={{ opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: showContent ? 0.55 : 0 }}
           className="font-serif text-3xl leading-tight text-ivory sm:text-4xl"
         >
           {bride.nickname} <span className="text-champagne">&amp;</span> {groom.nickname}
         </motion.h1>
         <motion.p
-          animate={{ opacity: revealed ? 1 : 0 }}
-          transition={{ duration: 0.8, delay: revealed ? 0.65 : 0 }}
+          animate={{ opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.8, delay: showContent ? 0.7 : 0 }}
           className="mt-2 text-xs uppercase tracking-[0.35em] text-ash-light"
         >
           {weddingDateDisplay}
@@ -89,15 +94,16 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
           />
 
           {/*
-            strip.jpg "printing" out of the frame's slot, triggered by the
-            tap (see handleOpen). Positioned as a percentage of the frame,
-            measured directly off the slot's actual pixel bounds in
-            page1.jpg (roughly x 42–52%, y 37–40%), so it stays aligned
-            with the slot at any size instead of emerging from the ferns
-            above it. Revealed top-down via an animated clip-path — the
-            top edge stays pinned at the slot the whole time while
-            progressively more becomes visible below, so it reads as
-            paper feeding out rather than sliding or fading in place.
+            strip.jpg "printing" out of the frame's slot, triggered by
+            clicking the slot/arrow (see handleReveal). Positioned as a
+            percentage of the frame, measured directly off the slot's
+            actual pixel bounds in page1.jpg (roughly x 42–52%, y 37–40%),
+            so it stays aligned with the slot at any size. Revealed
+            top-down via an animated clip-path — the top edge stays
+            pinned at the slot the whole time while progressively more
+            becomes visible below, matching the continuous "paper
+            feeding out" motion of the reference animation rather than
+            sliding or fading in place.
           */}
           <div
             className="absolute overflow-hidden"
@@ -108,8 +114,8 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
               <motion.div
                 className="absolute inset-0 rounded-[1px] shadow-[0_14px_24px_-6px_rgba(0,0,0,0.65)]"
                 initial={{ clipPath: 'inset(0% 0% 100% 0%)' }}
-                animate={{ clipPath: revealed ? 'inset(0% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)' }}
-                transition={{ duration: 1.7, ease: [0.16, 1, 0.3, 1] }}
+                animate={{ clipPath: showContent ? 'inset(0% 0% 0% 0%)' : 'inset(0% 0% 100% 0%)' }}
+                transition={{ duration: 2.1, ease: 'easeOut' }}
               >
                 <img
                   src={media.openingStripImage}
@@ -121,16 +127,49 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
               </motion.div>
             </div>
           </div>
+
+          {/*
+            Click target: the slot/tab plus the nudging arrow beside it —
+            this (not a generic tap-anywhere) is what triggers the strip
+            printing and the text reveal.
+          */}
+          <motion.button
+            type="button"
+            onClick={handleReveal}
+            disabled={stage !== 'idle'}
+            animate={{ opacity: stage === 'idle' ? 1 : 0 }}
+            transition={{ duration: 0.35 }}
+            className="absolute rounded-full disabled:pointer-events-none"
+            style={{ left: '39%', top: '32%', width: '30%', height: '14%' }}
+            aria-label="Open the invitation"
+          >
+            <motion.svg
+              viewBox="0 0 60 24"
+              fill="none"
+              aria-hidden="true"
+              className="absolute h-auto text-champagne drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
+              style={{ right: '-4%', top: '30%', width: '48%' }}
+              animate={{ x: [0, -6, 0] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <path
+                d="M56 12H8M8 12l10-10M8 12l10 10"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </motion.svg>
+          </motion.button>
         </div>
 
         <motion.button
           type="button"
-          onClick={handleOpen}
-          disabled={stage !== 'idle'}
-          animate={{ opacity: stage === 'idle' ? 1 : 0 }}
-          transition={{ duration: 0.4 }}
+          onClick={handleProceed}
+          disabled={stage !== 'revealed'}
+          animate={{ opacity: showContent ? 1 : 0 }}
+          transition={{ duration: 0.6, delay: showContent ? 1.9 : 0 }}
           className="group relative mt-10 inline-flex items-center gap-3 disabled:pointer-events-none"
-          aria-label="Open the Invitation"
         >
           <span className="animate-heartbeat font-serif text-xl italic tracking-wide text-champagne transition-colors duration-300 group-hover:text-ivory sm:text-2xl">
             Open the Invitation
@@ -138,7 +177,7 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
         </motion.button>
       </motion.div>
 
-      {/* White cross-fade cover, see handleOpen() for sequencing. */}
+      {/* White cross-fade cover, see handleProceed() for sequencing. */}
       <motion.div
         className="pointer-events-none absolute inset-0 z-20 bg-ivory"
         initial={{ opacity: 0 }}
