@@ -83,41 +83,51 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
 
       <FallingPetals count={8} />
 
+      {/*
+        This wrapper (not the text around it) is what the outer
+        items-center/justify-center flex actually centers, so the frame
+        itself sits at the true horizontal + vertical center of the
+        viewport at any screen size. The "above"/"below" text blocks are
+        positioned relative to it (bottom-full / top-full) rather than
+        stacked in normal flow, so their height never shifts the frame off
+        center.
+      */}
       <motion.div
-        className="relative z-10 flex w-full flex-col items-center text-center"
+        className="relative z-10 flex items-center justify-center"
         animate={{ opacity: stage === 'leaving' ? 0 : 1 }}
         transition={{ duration: 0.35 }}
       >
-        <motion.p
-          animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : -8 }}
-          transition={{ duration: 0.9, delay: showContent ? 0.2 : 0 }}
-          className="text-eyebrow mb-3"
-        >
-          Together with their families
-        </motion.p>
-        <motion.h1
-          animate={{ opacity: showContent ? 1 : 0 }}
-          transition={{ duration: 0.9, delay: showContent ? 0.35 : 0 }}
-          className="font-serif text-3xl leading-tight text-ivory sm:text-4xl"
-        >
-          {bride.nickname} <span className="text-champagne">&amp;</span> {groom.nickname}
-        </motion.h1>
-        <motion.p
-          animate={{ opacity: showContent ? 1 : 0 }}
-          transition={{ duration: 0.9, delay: showContent ? 0.5 : 0 }}
-          className="mt-2 text-xs uppercase tracking-[0.35em] text-ash-light"
-        >
-          {weddingDateDisplay}
-        </motion.p>
-
         {/*
-          Fills most of the page's width (not just a small centered card),
-          with margin above/below reserved for the text so nothing touches
-          the viewport edges. Aspect ratio matches printing.gif's native
-          1034x564 canvas exactly, so the button hit-area below stays
-          aligned with the real "V&R" seal at any size.
+          Fills most of the page's width (not just a small centered card).
+          Aspect ratio matches the cropped printing.gif canvas exactly, so
+          the button hit-area below stays aligned with the real "V&R" seal
+          at any size.
         */}
-        <div className="relative mt-8 w-[90vw] max-w-5xl" style={{ aspectRatio: '676 / 559' }}>
+        <div className="relative w-[90vw] max-w-5xl" style={{ aspectRatio: '676 / 559' }}>
+          <div className="absolute inset-x-0 bottom-full mb-8 flex flex-col items-center text-center">
+            <motion.p
+              animate={{ opacity: showContent ? 1 : 0, y: showContent ? 0 : -8 }}
+              transition={{ duration: 0.9, delay: showContent ? 0.2 : 0 }}
+              className="text-eyebrow mb-3"
+            >
+              Together with their families
+            </motion.p>
+            <motion.h1
+              animate={{ opacity: showContent ? 1 : 0 }}
+              transition={{ duration: 0.9, delay: showContent ? 0.35 : 0 }}
+              className="font-serif text-3xl leading-tight text-ivory sm:text-4xl"
+            >
+              {bride.nickname} <span className="text-champagne">&amp;</span> {groom.nickname}
+            </motion.h1>
+            <motion.p
+              animate={{ opacity: showContent ? 1 : 0 }}
+              transition={{ duration: 0.9, delay: showContent ? 0.5 : 0 }}
+              className="mt-2 text-xs uppercase tracking-[0.35em] text-ash-light"
+            >
+              {weddingDateDisplay}
+            </motion.p>
+          </div>
+
           <img
             src={stage === 'idle' ? media.printingIdleImage : `${media.printingAnimatedImage}?play=${playKey}`}
             alt=""
@@ -152,20 +162,22 @@ export default function EnvelopeOpening({ onOpen }: EnvelopeOpeningProps) {
               </motion.svg>
             </motion.button>
           )}
-        </div>
 
-        <motion.button
-          type="button"
-          onClick={handleProceed}
-          disabled={stage !== 'revealed'}
-          animate={{ opacity: showContent ? 1 : 0 }}
-          transition={{ duration: 0.6, delay: showContent ? 0.9 : 0 }}
-          className="group relative mt-8 inline-flex items-center gap-3 disabled:pointer-events-none"
-        >
-          <span className="animate-heartbeat font-serif text-xl italic tracking-wide text-champagne transition-colors duration-300 group-hover:text-ivory sm:text-2xl">
-            Open the Invitation
-          </span>
-        </motion.button>
+          <div className="absolute inset-x-0 top-full mt-8 flex justify-center">
+            <motion.button
+              type="button"
+              onClick={handleProceed}
+              disabled={stage !== 'revealed'}
+              animate={{ opacity: showContent ? 1 : 0 }}
+              transition={{ duration: 0.6, delay: showContent ? 0.9 : 0 }}
+              className="group relative inline-flex items-center gap-3 disabled:pointer-events-none"
+            >
+              <span className="animate-heartbeat font-serif text-xl italic tracking-wide text-champagne transition-colors duration-300 group-hover:text-ivory sm:text-2xl">
+                Open the Invitation
+              </span>
+            </motion.button>
+          </div>
+        </div>
       </motion.div>
 
       {/* White cross-fade cover, see handleProceed() for sequencing. */}
